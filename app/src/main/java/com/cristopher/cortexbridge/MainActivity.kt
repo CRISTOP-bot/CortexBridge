@@ -429,7 +429,7 @@ private fun readVideoInfo(context: android.content.Context, uri: Uri): VideoInfo
     return try {
         retriever.setDataSource(context, uri)
         VideoInfo(
-            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_DURATION)?.toLongOrNull() ?: 6_000L,
+            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 6_000L,
             retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0,
             retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
         )
