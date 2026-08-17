@@ -1,0 +1,17 @@
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+
+complexity:
+  LongMethod:
+    active: false
+  TooManyFunctions:
+    active: false
+
+style:
+  MagicNumber:
+    active: false
+  WildcardImport:
+    active: false

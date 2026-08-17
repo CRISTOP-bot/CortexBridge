@@ -1,0 +1,25 @@
+name: Cleanup old prereleases
+
+on:
+  schedule:
+    - cron: '31 5 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    name: Keep the latest 10 prereleases
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete older prereleases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+            --jq '.[] | select(.prerelease == true) | .id' \
+            | tail -n +11 \
+            | while read -r release_id; do
+                [ -z "$release_id" ] || gh api --method DELETE "repos/${GITHUB_REPOSITORY}/releases/$release_id"
+              done

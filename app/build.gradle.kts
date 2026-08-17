@@ -2,7 +2,14 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("io.gitlab.arturbosch.detekt")
+    id("org.jlleitschuh.gradle.ktlint")
 }
+
+val signingStoreFile = project.findProperty("signingStoreFile") as String?
+val signingStorePassword = project.findProperty("signingStorePassword") as String?
+val signingKeyAlias = project.findProperty("signingKeyAlias") as String?
+val signingKeyPassword = project.findProperty("signingKeyPassword") as String?
 
 android {
     namespace = "com.cristopher.cortexbridge"
@@ -16,9 +23,23 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        if (signingStoreFile != null) {
+            create("release") {
+                storeFile = file(signingStoreFile)
+                storePassword = signingStorePassword
+                keyAlias = signingKeyAlias
+                keyPassword = signingKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (signingStoreFile != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -36,6 +57,18 @@ android {
     buildFeatures {
         compose = true
     }
+}
+
+detekt {
+    config.setFrom(files("$rootDir/config/detekt.yml"))
+    buildUponDefaultConfig = true
+    parallel = true
+    ignoreFailures = true
+}
+
+ktlint {
+    version.set("1.3.1")
+    ignoreFailures.set(true)
 }
 
 dependencies {

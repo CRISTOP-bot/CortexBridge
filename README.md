@@ -67,9 +67,39 @@ El workflow `.github/workflows/android.yml` ejecuta automáticamente:
 - compilación debug;
 - compilación release sin firma;
 - publicación de ambos APK como artifacts;
-- publicación de un APK debug firmado para instalarlo directamente en un teléfono de pruebas.
+- publicación de un APK debug firmado para instalarlo directamente en un teléfono de pruebas;
+- CodeQL, Dependabot, Detekt, KtLint, revisión de dependencias, control de tamaño y compilación nocturna;
+- limpieza semanal de prereleases antiguas;
+- workflow manual para releases firmadas de producción.
 
 Se ejecuta en cada push a `main`, en pull requests y manualmente desde la pestaña **Actions**.
+
+## Release firmado de producción
+
+El workflow `signed-release.yml` es manual y necesita estos GitHub Secrets antes de ejecutarlo:
+
+```text
+ANDROID_KEYSTORE_BASE64
+ANDROID_KEYSTORE_PASSWORD
+ANDROID_KEY_ALIAS
+ANDROID_KEY_PASSWORD
+```
+
+La keystore debe ser propia y no debe subirse al repositorio. El workflow genera una release estable con un APK firmado.
+
+## Workflows incluidos
+
+| Workflow | Función |
+| --- | --- |
+| `android.yml` | Tests, lint y APKs debug/release sin firma |
+| `release.yml` | Prerelease automática por cambio en `main` |
+| `signed-release.yml` | Release estable firmada, manual |
+| `codeql.yml` | Análisis de seguridad Kotlin/Java |
+| `quality.yml` | Detekt, KtLint y documentación |
+| `dependency-review.yml` | Revisión de dependencias en PRs |
+| `apk-size.yml` | Límite de 30 MiB para el APK debug |
+| `nightly.yml` | Compilación para API 26, 30 y 35 |
+| `cleanup-prereleases.yml` | Conserva las últimas 10 prereleases |
 
 ## Próximas mejoras posibles
 
