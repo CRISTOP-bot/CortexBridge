@@ -38,10 +38,11 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Run tests and build release APK
+      - name: Run tests and build installable debug APK
         run: |
           set -o pipefail
-          gradle test assembleRelease --stacktrace 2>&1 | tee build.log
+          gradle test assembleDebug assembleRelease --stacktrace 2>&1 | tee build.log
+          cp app/build/outputs/apk/debug/app-debug.apk "CortexBridge-${RELEASE_VERSION}-debug.apk"
 
       - name: Add build diagnostics to summary
         if: failure()
@@ -58,4 +59,6 @@ jobs:
           name: CortexBridge ${{ env.RELEASE_VERSION }}
           generate_release_notes: true
           prerelease: true
-          files: app/build/outputs/apk/release/app-release-unsigned.apk
+          files: |
+            CortexBridge-${{ env.RELEASE_VERSION }}-debug.apk
+            app/build/outputs/apk/release/app-release-unsigned.apk
