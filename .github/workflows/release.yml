@@ -39,7 +39,17 @@ jobs:
           gradle-version: '8.9'
 
       - name: Run tests and build release APK
-        run: gradle test assembleRelease --stacktrace
+        run: |
+          set -o pipefail
+          gradle test assembleRelease --stacktrace 2>&1 | tee build.log
+
+      - name: Add build diagnostics to summary
+        if: failure()
+        run: |
+          echo '## CortexBridge build diagnostics' >> "$GITHUB_STEP_SUMMARY"
+          echo '```text' >> "$GITHUB_STEP_SUMMARY"
+          tail -300 build.log >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
