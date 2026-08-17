@@ -45,7 +45,7 @@ app/build/outputs/apk/debug/app-debug.apk
 app/build/outputs/apk/release/app-release-unsigned.apk
 ```
 
-El release es **sin firmar**. Para distribuirlo se debe configurar una keystore propia y no subirla al repositorio.
+El APK release principal es **sin firmar**. Para probarlo en el teléfono, descarga el asset que termina en `-debug.apk`, que sí está firmado con la clave debug de Android. Para distribuirlo públicamente se debe configurar una keystore propia y no subirla al repositorio.
 
 ## Uso
 
@@ -65,7 +65,8 @@ El workflow `.github/workflows/android.yml` ejecuta automáticamente:
 - lint;
 - compilación debug;
 - compilación release sin firma;
-- publicación de ambos APK como artifacts.
+- publicación de ambos APK como artifacts;
+- publicación de un APK debug firmado para instalarlo directamente en un teléfono de pruebas.
 
 Se ejecuta en cada push a `main`, en pull requests y manualmente desde la pestaña **Actions**.
 
