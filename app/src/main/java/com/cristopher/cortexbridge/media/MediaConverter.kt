@@ -6,11 +6,11 @@ import androidx.media3.common.Effects
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.effect.Crop
+import androidx.media3.effect.ScaleAndRotateTransformation
 import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.ProgressHolder
-import androidx.media3.transformer.TransformationRequest
 import androidx.media3.transformer.Transformer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -71,20 +71,15 @@ object MediaConverter {
             .setClippingConfiguration(clip)
             .build()
 
-        val effects = buildCropEffects(options)
+        val effects = buildVideoEffects(options)
         val editedItem = EditedMediaItem.Builder(mediaItem)
             .setRemoveAudio(options.removeAudio)
             .setEffects(Effects(emptyList(), effects))
             .build()
-        val request = TransformationRequest.Builder()
-            .setVideoMimeType(MimeTypes.VIDEO_H264)
-            .setAudioMimeType(MimeTypes.AUDIO_AAC)
-            .setResolution(options.quality.outputHeight)
-            .build()
-
         lateinit var monitor: Job
         val transformer = Transformer.Builder(context)
-            .setTransformationRequest(request)
+            .setVideoMimeType(MimeTypes.VIDEO_H264)
+            .setAudioMimeType(MimeTypes.AUDIO_AAC)
             .addListener(object : Transformer.Listener {
                 override fun onCompleted(
                     composition: androidx.media3.transformer.Composition,
@@ -124,24 +119,33 @@ object MediaConverter {
         transformer.start(editedItem, output.absolutePath)
     }
 
-    private fun buildCropEffects(options: Options): List<androidx.media3.common.Effect> {
-        if (options.aspect == Aspect.ORIGINAL || options.sourceWidth <= 0 || options.sourceHeight <= 0) {
-            return emptyList()
+    private fun buildVideoEffects(options: Options): List<androidx.media3.common.Effect> {
+        val effects = mutableListOf<androidx.media3.common.Effect>()
+        if (options.aspect != Aspect.ORIGINAL && options.sourceWidth > 0 && options.sourceHeight > 0) {
+            val desiredRatio = when (options.aspect) {
+                Aspect.VERTICAL -> 9f / 16f
+                Aspect.SQUARE -> 1f
+                Aspect.ORIGINAL -> 0f
+            }
+            val inputRatio = options.sourceWidth.toFloat() / options.sourceHeight.toFloat()
+            if (inputRatio > desiredRatio) {
+                val keptWidth = desiredRatio / inputRatio
+                val half = keptWidth / 2f
+                effects += Crop(-half, half, -0.5f, 0.5f)
+            } else if (desiredRatio > 0f) {
+                val keptHeight = inputRatio / desiredRatio
+                val half = keptHeight / 2f
+                effects += Crop(-0.5f, 0.5f, -half, half)
+            }
         }
-        val desiredRatio = when (options.aspect) {
-            Aspect.VERTICAL -> 9f / 16f
-            Aspect.SQUARE -> 1f
-            Aspect.ORIGINAL -> return emptyList()
+        if (options.sourceHeight > 0) {
+            val scale = options.quality.outputHeight.toFloat() / options.sourceHeight.toFloat()
+            if (scale < 1f) {
+                effects += ScaleAndRotateTransformation.Builder()
+                    .setScale(scale, scale)
+                    .build()
+            }
         }
-        val inputRatio = options.sourceWidth.toFloat() / options.sourceHeight.toFloat()
-        return if (inputRatio > desiredRatio) {
-            val keptWidth = desiredRatio / inputRatio
-            val half = keptWidth / 2f
-            listOf(Crop(-half, half, -0.5f, 0.5f))
-        } else {
-            val keptHeight = inputRatio / desiredRatio
-            val half = keptHeight / 2f
-            listOf(Crop(-0.5f, 0.5f, -half, half))
-        }
+        return effects
     }
 }
