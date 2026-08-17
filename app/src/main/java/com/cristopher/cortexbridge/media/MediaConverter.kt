@@ -1,5 +1,6 @@
 package com.cristopher.cortexbridge.media
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import androidx.media3.transformer.Effects
@@ -24,7 +25,9 @@ import java.io.File
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+@SuppressLint("UnsafeOptInUsageError")
 @OptIn(UnstableApi::class)
+@androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 object MediaConverter {
     enum class Destination { WHATSAPP, TIKTOK }
     enum class Quality(val label: String, val outputHeight: Int) {
