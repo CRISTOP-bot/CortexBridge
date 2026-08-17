@@ -14,7 +14,7 @@ Aplicación Android en Kotlin para mover y preparar videos cortos entre TikTok y
 - Compresión mediante resolución de salida configurable.
 - Barra de progreso real y cancelación de conversiones.
 - Guardado en `Películas/CortexBridge` mediante MediaStore.
-- Historial local de resultados guardados.
+- Historial local persistente de resultados guardados con miniaturas cuando Android las proporciona.
 - Compartir mediante el selector oficial de Android.
 - Tema claro/oscuro.
 - Logo vectorial de CortexBridge como icono de la app y dentro de la interfaz.
@@ -85,7 +85,7 @@ ANDROID_KEY_ALIAS
 ANDROID_KEY_PASSWORD
 ```
 
-La keystore debe ser propia y no debe subirse al repositorio. El workflow genera una release estable con un APK firmado.
+La keystore debe ser propia y no debe subirse al repositorio. El workflow genera una release estable con un APK firmado y un `.aab` listo para Google Play. La publicación final en Google Play requiere una cuenta de Play Console, ficha de aplicación, política de privacidad y revisión de Google.
 
 ## Workflows incluidos
 

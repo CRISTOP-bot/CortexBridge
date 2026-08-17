@@ -4,7 +4,10 @@ import android.Manifest
 import android.content.ClipData
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
+import android.os.CancellationSignal
+import android.util.Size
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -13,6 +16,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -64,6 +68,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -398,7 +403,7 @@ private fun CortexBridgeApp(
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Historial", fontWeight = FontWeight.SemiBold)
-                        history.take(5).forEachIndexed { index, _ -> Text("• Video guardado ${index + 1}") }
+                        history.take(5).forEach { uri -> HistoryRow(context, uri) }
                     }
                 }
             }
@@ -432,6 +437,31 @@ private fun OptionRow(options: List<String>, selected: String, onSelected: (Stri
         options.forEach { option ->
             FilterChip(selected = selected == option, onClick = { onSelected(option) }, label = { Text(option) })
         }
+    }
+}
+
+@Composable
+private fun HistoryRow(context: android.content.Context, uri: Uri) {
+    val thumbnail = remember(uri) {
+        if (Build.VERSION.SDK_INT >= 29) {
+            runCatching { context.contentResolver.loadThumbnail(uri, Size(72, 72), null) }.getOrNull()
+        } else {
+            null
+        }
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (thumbnail != null) {
+            Image(
+                bitmap = thumbnail.asImageBitmap(),
+                contentDescription = "Miniatura del video guardado",
+                modifier = Modifier.size(56.dp)
+            )
+            Spacer(Modifier.size(8.dp))
+        } else {
+            Icon(Icons.Default.VideoLibrary, null, modifier = Modifier.size(32.dp))
+            Spacer(Modifier.size(8.dp))
+        }
+        Text("Video guardado")
     }
 }
 

@@ -58,70 +58,82 @@ object MediaConverter {
             outputDirectory,
             "cortexbridge_${options.destination.name.lowercase()}_${System.currentTimeMillis()}.mp4"
         )
+        var transformer: Transformer? = null
+        var monitor: Job? = null
 
-        val safeStart = options.startMs.coerceAtLeast(0)
-        val sourceEnd = if (options.durationMs > 0) options.durationMs else (options.endMs ?: 0L)
-        val requestedEnd = options.endMs ?: sourceEnd
-        val exportEnd = if (options.destination == Destination.WHATSAPP) {
-            minOf(requestedEnd.takeIf { it > 0 } ?: (safeStart + 6_000), safeStart + 6_000)
-        } else {
-            requestedEnd
-        }
-        val clip = MediaItem.ClippingConfiguration.Builder()
-            .setStartPositionMs(safeStart)
-            .apply { if (exportEnd > safeStart) setEndPositionMs(exportEnd) }
-            .build()
-        val mediaItem = MediaItem.Builder()
-            .setUri(input)
-            .setClippingConfiguration(clip)
-            .build()
-
-        val effects = buildVideoEffects(options)
-        val editedItem = EditedMediaItem.Builder(mediaItem)
-            .setRemoveAudio(options.removeAudio)
-            .setEffects(Effects(emptyList(), effects))
-            .build()
-        lateinit var monitor: Job
-        val transformer = Transformer.Builder(context)
-            .setVideoMimeType(MimeTypes.VIDEO_H264)
-            .setAudioMimeType(MimeTypes.AUDIO_AAC)
-            .addListener(object : Transformer.Listener {
-                override fun onCompleted(
-                    composition: androidx.media3.transformer.Composition,
-                    exportResult: ExportResult
-                ) {
-                    monitor.cancel()
-                    onProgress(100)
-                    continuation.resume(output)
-                }
-
-                override fun onError(
-                    composition: androidx.media3.transformer.Composition,
-                    exportResult: ExportResult,
-                    exportException: ExportException
-                ) {
-                    monitor.cancel()
-                    output.delete()
-                    continuation.resumeWithException(exportException)
-                }
-            })
-            .build()
-
-        monitor = CoroutineScope(Dispatchers.Default).launch {
-            val holder = ProgressHolder()
-            while (isActive && continuation.isActive) {
-                if (transformer.getProgress(holder) == Transformer.PROGRESS_STATE_AVAILABLE) {
-                    onProgress(holder.progress)
-                }
-                delay(250)
-            }
-        }
-        continuation.invokeOnCancellation {
-            monitor.cancel()
-            transformer.cancel()
+        fun fail(error: Throwable) {
+            monitor?.cancel()
             output.delete()
+            if (continuation.isActive) continuation.resumeWithException(error)
         }
-        transformer.start(editedItem, output.absolutePath)
+
+        try {
+            val safeStart = options.startMs.coerceAtLeast(0)
+            val sourceEnd = if (options.durationMs > 0) options.durationMs else (options.endMs ?: 0L)
+            val requestedEnd = options.endMs ?: sourceEnd
+            val exportEnd = if (options.destination == Destination.WHATSAPP) {
+                minOf(requestedEnd.takeIf { it > 0 } ?: (safeStart + 6_000), safeStart + 6_000)
+            } else {
+                requestedEnd
+            }
+            require(exportEnd <= 0L || exportEnd > safeStart) { "El final debe ser posterior al inicio" }
+
+            val clip = MediaItem.ClippingConfiguration.Builder()
+                .setStartPositionMs(safeStart)
+                .apply { if (exportEnd > safeStart) setEndPositionMs(exportEnd) }
+                .build()
+            val mediaItem = MediaItem.Builder()
+                .setUri(input)
+                .setClippingConfiguration(clip)
+                .build()
+            val editedItem = EditedMediaItem.Builder(mediaItem)
+                .setRemoveAudio(options.removeAudio)
+                .setEffects(Effects(emptyList(), buildVideoEffects(options)))
+                .build()
+
+            transformer = Transformer.Builder(context)
+                .setVideoMimeType(MimeTypes.VIDEO_H264)
+                .setAudioMimeType(MimeTypes.AUDIO_AAC)
+                .addListener(object : Transformer.Listener {
+                    override fun onCompleted(
+                        composition: androidx.media3.transformer.Composition,
+                        exportResult: ExportResult
+                    ) {
+                        monitor?.cancel()
+                        onProgress(100)
+                        if (continuation.isActive) continuation.resume(output)
+                    }
+
+                    override fun onError(
+                        composition: androidx.media3.transformer.Composition,
+                        exportResult: ExportResult,
+                        exportException: ExportException
+                    ) {
+                        fail(exportException)
+                    }
+                })
+                .build()
+
+            val runningTransformer = requireNotNull(transformer)
+            monitor = CoroutineScope(Dispatchers.Default).launch {
+                val holder = ProgressHolder()
+                while (isActive && continuation.isActive) {
+                    if (runningTransformer.getProgress(holder) == Transformer.PROGRESS_STATE_AVAILABLE) {
+                        onProgress(holder.progress)
+                    }
+                    delay(250)
+                }
+            }
+            continuation.invokeOnCancellation {
+                monitor?.cancel()
+                runningTransformer.cancel()
+                output.delete()
+            }
+            runningTransformer.start(editedItem, output.absolutePath)
+        } catch (error: Throwable) {
+            transformer?.cancel()
+            fail(error)
+        }
     }
 
     private fun buildVideoEffects(options: Options): List<androidx.media3.common.Effect> {
