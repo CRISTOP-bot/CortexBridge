@@ -65,6 +65,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -219,7 +220,17 @@ private fun CortexBridgeApp(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("CortexBridge") },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(com.cristopher.cortexbridge.R.drawable.ic_cortexbridge),
+                            contentDescription = "Logo de CortexBridge",
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(Modifier.size(8.dp))
+                        Text("CortexBridge")
+                    }
+                },
                 actions = {
                     TextButton(onClick = onToggleDarkMode) {
                         Icon(Icons.Default.DarkMode, "Tema oscuro")
