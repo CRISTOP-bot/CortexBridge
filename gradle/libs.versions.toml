@@ -6,6 +6,7 @@ lifecycle = "2.8.7"
 activityCompose = "1.10.1"
 composeBom = "2025.01.01"
 media3 = "1.5.1"
+junit = "4.13.2"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -24,4 +25,6 @@ androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
 androidx-compose-material-icons = { module = "androidx.compose.material:material-icons-extended" }
 androidx-media3-transformer = { module = "androidx.media3:media3-transformer", version.ref = "media3" }
+androidx-media3-effect = { module = "androidx.media3:media3-effect", version.ref = "media3" }
 androidx-media3-common = { module = "androidx.media3:media3-common", version.ref = "media3" }
+junit = { module = "junit:junit", version.ref = "junit" }
