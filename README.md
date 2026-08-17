@@ -17,6 +17,7 @@ Aplicación Android en Kotlin para mover y preparar videos cortos entre TikTok y
 - Historial local de resultados guardados.
 - Compartir mediante el selector oficial de Android.
 - Tema claro/oscuro.
+- Logo vectorial de CortexBridge como icono de la app y dentro de la interfaz.
 - Procesamiento local: los archivos no se suben a ningún servidor.
 - Tests unitarios, lint, build debug y build release sin firma en GitHub Actions.
 
