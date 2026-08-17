@@ -1,59 +1,80 @@
 # CortexBridge
 
-Aplicación Android en Kotlin para convertir videos cortos entre TikTok y WhatsApp.
+Aplicación Android en Kotlin para mover y preparar videos cortos entre TikTok y WhatsApp.
 
-## Qué hace este MVP
+## Funciones incluidas
 
-- Selecciona un video desde la galería o recibe uno desde el menú **Compartir** de Android.
-- **TikTok → WhatsApp:** genera un MP4 H.264 silencioso de hasta 6 segundos.
-  WhatsApp suele representar estos MP4 sin audio como GIF.
-- **WhatsApp → TikTok:** genera un MP4 H.264 compatible y conserva el audio si el archivo original lo tiene.
-- Comparte el resultado usando el selector oficial de Android.
-- Procesa los archivos localmente; no requiere servidor ni cuenta propia.
+- **TikTok → WhatsApp:** MP4 H.264 silencioso de hasta 6 segundos; WhatsApp normalmente lo muestra como GIF.
+- **WhatsApp → TikTok:** MP4 H.264 compatible; permite conservar el audio.
+- Recepción desde el menú **Compartir** de Android.
+- Selector de video desde la galería y vista previa en bucle.
+- Recorte de inicio y final con controles visuales.
+- Calidades 480p, 720p y 1080p.
+- Formatos Original, vertical 9:16 y cuadrado 1:1 con recorte centrado.
+- Compresión mediante resolución de salida configurable.
+- Barra de progreso real y cancelación de conversiones.
+- Guardado en `Películas/CortexBridge` mediante MediaStore.
+- Historial local de resultados guardados.
+- Compartir mediante el selector oficial de Android.
+- Tema claro/oscuro.
+- Procesamiento local: los archivos no se suben a ningún servidor.
+- Tests unitarios, lint, build debug y build release sin firma en GitHub Actions.
 
-> WhatsApp no suele usar un archivo `.gif` real para sus GIFs: normalmente utiliza un MP4 corto sin audio. Por eso CortexBridge exporta ese formato, que es el más práctico para compartirlo como GIF.
+> WhatsApp normalmente usa un MP4 corto sin audio para sus GIFs, no un archivo `.gif` real. CortexBridge prioriza ese formato porque es más compatible y ligero. La importación de GIF se deja al decodificador de Android; la exportación principal sigue siendo MP4 compatible.
 
 ## Requisitos
 
 - Android Studio reciente.
 - JDK 17.
 - Android SDK 35.
-- Un dispositivo Android 8.0 (API 26) o superior.
+- Android 8.0 (API 26) o superior.
 - TikTok y/o WhatsApp instalados para compartir directamente.
 
-## Compilar
+## Compilar localmente
 
-Abre `CortexBridge/` en Android Studio y ejecuta la configuración Gradle.
-
-Desde una terminal con Gradle disponible:
+Abre `CortexBridge/` en Android Studio. Desde una terminal con Gradle disponible:
 
 ```bash
-gradle assembleDebug
+gradle test lint assembleDebug assembleRelease
 ```
 
-El APK de debug queda en:
+Los APK quedan en:
 
 ```text
 app/build/outputs/apk/debug/app-debug.apk
+app/build/outputs/apk/release/app-release-unsigned.apk
 ```
+
+El release es **sin firmar**. Para distribuirlo se debe configurar una keystore propia y no subirla al repositorio.
 
 ## Uso
 
 1. Abre CortexBridge.
 2. Elige `TikTok → WhatsApp` o `WhatsApp → TikTok`.
-3. Pulsa **Elegir video** o comparte un video desde otra app hacia CortexBridge.
-4. Pulsa **Convertir**.
-5. Pulsa **Compartir en WhatsApp** o **Compartir en TikTok** y confirma el destino en el selector de Android.
+3. Selecciona un video o compártelo desde otra aplicación hacia CortexBridge.
+4. Revisa la vista previa.
+5. Ajusta el recorte, la calidad, el formato y el audio.
+6. Pulsa **Convertir**.
+7. Comparte el resultado o guárdalo en la galería.
 
-## Estado y siguientes pasos
+## GitHub Actions
 
-Este es un MVP funcional. Antes de publicarlo conviene agregar:
+El workflow `.github/workflows/android.yml` ejecuta automáticamente:
 
-- recorte visual con vista previa;
-- selección de duración y relación de aspecto;
-- control de tamaño/calidad;
-- manejo de permisos y errores por códec con mensajes más detallados;
-- pruebas en distintas versiones de Android y modelos de teléfono;
-- icono, capturas y firma de release.
+- tests unitarios;
+- lint;
+- compilación debug;
+- compilación release sin firma;
+- publicación de ambos APK como artifacts.
+
+Se ejecuta en cada push a `main`, en pull requests y manualmente desde la pestaña **Actions**.
+
+## Próximas mejoras posibles
+
+- Editor con desplazamiento de video por fotogramas.
+- Filtros, texto y stickers.
+- Codificador `.gif` real opcional.
+- Firma automática mediante GitHub Environments y una keystore protegida.
+- Pruebas instrumentadas en varios dispositivos.
 
 TikTok y WhatsApp son marcas de sus respectivos propietarios. CortexBridge no es una aplicación oficial de esas plataformas.
