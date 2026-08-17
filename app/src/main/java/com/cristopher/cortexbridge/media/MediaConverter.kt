@@ -2,7 +2,7 @@ package com.cristopher.cortexbridge.media
 
 import android.content.Context
 import android.net.Uri
-import androidx.media3.common.Effects
+import androidx.media3.transformer.Effects
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.effect.Crop
