@@ -55,16 +55,16 @@ object MediaConverter {
         )
 
         val safeStart = options.startMs.coerceAtLeast(0)
-        val sourceEnd = if (options.durationMs > 0) options.durationMs else options.endMs
+        val sourceEnd = if (options.durationMs > 0) options.durationMs else (options.endMs ?: 0L)
         val requestedEnd = options.endMs ?: sourceEnd
-        val whatsappEnd = if (options.destination == Destination.WHATSAPP) {
+        val exportEnd = if (options.destination == Destination.WHATSAPP) {
             minOf(requestedEnd.takeIf { it > 0 } ?: (safeStart + 6_000), safeStart + 6_000)
         } else {
             requestedEnd
         }
         val clip = MediaItem.ClippingConfiguration.Builder()
             .setStartPositionMs(safeStart)
-            .apply { if (whatsappEnd > safeStart) setEndPositionMs(whatsappEnd) }
+            .apply { if (exportEnd > safeStart) setEndPositionMs(exportEnd) }
             .build()
         val mediaItem = MediaItem.Builder()
             .setUri(input)
